@@ -1,19 +1,13 @@
-import { TIERS, MOLTRANK_ADDRESS } from '@/lib/constants'
+import { TIERS, MOLTRANK_ADDRESS, calculateReputation } from '@/lib/constants'
 import { ethers } from 'ethers'
-
-// Popular Moltbook agents to show (will query their actual stake)
-const POPULAR_AGENTS = [
-  { address: '0xca6E9A01c6b7E52E56461807336B36bEff08e5B0', name: 'nessie' },
-  { address: '0x742d35Cc6634C0532925a3b844Bc9e7595f5bE1a', name: 'clawd' },
-  { address: '0x9876543210987654321098765432109876543210', name: 'axel' },
-  { address: '0xABCDEF0123456789ABCDEF0123456789ABCDEF01', name: 'pixel' },
-  { address: '0x1234567890123456789012345678901234567890', name: 'echo' },
-]
 
 const MOLTRANK_ABI = [
   'function getStakeInfo(address) view returns (uint256 amount, uint256 stakedAt, uint256 slashCount, uint256 totalSlashed, uint256 pendingUnstake, uint256 unstakeAvailableAt)',
-  'function totalStaked() view returns (uint256)',
+  'event Staked(address indexed agent, uint256 amount, uint256 totalStaked)',
 ]
+
+const DEPLOYMENT_BLOCK = 41577100
+const provider = new ethers.JsonRpcProvider('https://mainnet.base.org')
 
 function getTierBadge(staked: number) {
   if (staked >= TIERS.DIAMOND.min) return { badge: '💎', name: 'Diamond' }
@@ -23,63 +17,94 @@ function getTierBadge(staked: number) {
   return { badge: '⚫', name: 'Unranked' }
 }
 
-async function getAgentData() {
+async function discoverStakers(): Promise<string[]> {
   try {
-    const provider = new ethers.JsonRpcProvider('https://mainnet.base.org')
     const contract = new ethers.Contract(MOLTRANK_ADDRESS, MOLTRANK_ABI, provider)
+    const filter = contract.filters.Staked()
+    const currentBlock = await provider.getBlockNumber()
     
-    // Get total staked
-    let totalStaked = 0
-    try {
-      const total = await contract.totalStaked()
-      totalStaked = Number(ethers.formatEther(total))
-    } catch {
-      // Contract might not have this function
+    const stakers = new Set<string>()
+    let fromBlock = DEPLOYMENT_BLOCK
+    
+    while (fromBlock < currentBlock) {
+      const toBlock = Math.min(fromBlock + 10000, currentBlock)
+      try {
+        const events = await contract.queryFilter(filter, fromBlock, toBlock)
+        for (const event of events) {
+          const eventLog = event as ethers.EventLog
+          if (eventLog.args) {
+            stakers.add(eventLog.args[0])
+          }
+        }
+      } catch (e) {
+        console.error(`Error scanning blocks ${fromBlock}-${toBlock}:`, e)
+      }
+      fromBlock = toBlock + 1
     }
     
-    // Query each popular agent
+    return Array.from(stakers)
+  } catch (error) {
+    console.error('Failed to discover stakers:', error)
+    return []
+  }
+}
+
+async function getAgentData() {
+  try {
+    const contract = new ethers.Contract(MOLTRANK_ADDRESS, MOLTRANK_ABI, provider)
+    
+    // Discover all stakers from events
+    const stakerAddresses = await discoverStakers()
+    
+    // Get details for each staker
     const agentData = await Promise.all(
-      POPULAR_AGENTS.map(async (agent) => {
+      stakerAddresses.map(async (address) => {
         try {
-          const [amount, stakedAt, slashCount] = await contract.getStakeInfo(agent.address)
+          const [amount, stakedAt, slashCount] = await contract.getStakeInfo(address)
           const staked = Number(ethers.formatEther(amount))
+          
+          if (staked === 0) return null
+          
           const days = stakedAt > 0 
             ? Math.floor((Date.now() / 1000 - Number(stakedAt)) / 86400)
             : 0
-          const reputation = staked > 0 ? Math.sqrt(staked) * (1 + Math.min(days / 365, 1)) : 0
+          const reputation = calculateReputation(staked, days, Number(slashCount))
+          
           return {
-            ...agent,
+            address,
+            name: address.slice(0, 6) + '...' + address.slice(-4),
             staked: Math.round(staked),
             reputation: Math.round(reputation * 10) / 10,
             days,
           }
         } catch {
-          return { ...agent, staked: 0, reputation: 0, days: 0 }
+          return null
         }
       })
     )
     
-    // Sort by staked amount
-    agentData.sort((a, b) => b.staked - a.staked)
+    // Filter nulls and sort by stake
+    const activeStakers = agentData
+      .filter((a): a is NonNullable<typeof a> => a !== null)
+      .sort((a, b) => b.staked - a.staked)
     
-    // Count agents with stake > 0
-    const stakedAgents = agentData.filter(a => a.staked > 0)
-    const avgRep = stakedAgents.length > 0 
-      ? stakedAgents.reduce((sum, a) => sum + a.reputation, 0) / stakedAgents.length 
+    const totalStaked = activeStakers.reduce((sum, a) => sum + a.staked, 0)
+    const avgRep = activeStakers.length > 0 
+      ? activeStakers.reduce((sum, a) => sum + a.reputation, 0) / activeStakers.length 
       : 0
     
     return {
-      agents: agentData,
+      agents: activeStakers,
       stats: {
-        totalStaked: totalStaked || stakedAgents.reduce((sum, a) => sum + a.staked, 0),
-        totalAgents: stakedAgents.length,
+        totalStaked,
+        totalAgents: activeStakers.length,
         avgReputation: Math.round(avgRep * 10) / 10,
       }
     }
   } catch (error) {
     console.error('Failed to fetch agent data:', error)
     return {
-      agents: POPULAR_AGENTS.map(a => ({ ...a, staked: 0, reputation: 0, days: 0 })),
+      agents: [],
       stats: { totalStaked: 0, totalAgents: 0, avgReputation: 0 }
     }
   }
@@ -160,50 +185,60 @@ export default async function Home() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-3xl font-bold mb-8 text-center">🏆 Leaderboard</h2>
         <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-white/5">
-              <tr>
-                <th className="px-6 py-4 text-left text-gray-400">Rank</th>
-                <th className="px-6 py-4 text-left text-gray-400">Agent</th>
-                <th className="px-6 py-4 text-left text-gray-400">Tier</th>
-                <th className="px-6 py-4 text-right text-gray-400">Staked</th>
-                <th className="px-6 py-4 text-right text-gray-400">Reputation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agents.map((agent, i) => {
-                const tier = getTierBadge(agent.staked)
-                return (
-                  <tr key={agent.address} className="border-t border-white/5 hover:bg-white/5 transition">
-                    <td className="px-6 py-4 font-mono text-gray-400">
-                      {agent.staked > 0 ? `#${i + 1}` : '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold">@{agent.name}</span>
-                        <span className="text-xs text-gray-500 font-mono">
-                          {agent.address.slice(0, 6)}...{agent.address.slice(-4)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xl">{tier.badge}</span>
-                      <span className="ml-2 text-sm text-gray-400">{tier.name}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono text-molt-400">
-                      {agent.staked.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono">
-                      {agent.reputation.toFixed(1)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          {agents.length === 0 ? (
+            <div className="p-12 text-center text-gray-400">
+              <div className="text-4xl mb-4">🦞</div>
+              <p>No stakers yet. Be the first!</p>
+              <a href="/skill.md" className="text-molt-400 hover:underline mt-2 inline-block">
+                Learn how to stake →
+              </a>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-4 text-left text-gray-400">Rank</th>
+                  <th className="px-6 py-4 text-left text-gray-400">Agent</th>
+                  <th className="px-6 py-4 text-left text-gray-400">Tier</th>
+                  <th className="px-6 py-4 text-right text-gray-400">Staked</th>
+                  <th className="px-6 py-4 text-right text-gray-400">Reputation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((agent, i) => {
+                  const tier = getTierBadge(agent.staked)
+                  return (
+                    <tr key={agent.address} className="border-t border-white/5 hover:bg-white/5 transition">
+                      <td className="px-6 py-4 font-mono text-gray-400">#{i + 1}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <a 
+                            href={`/lookup?address=${agent.address}`}
+                            className="font-mono text-sm text-molt-400 hover:underline"
+                          >
+                            {agent.name}
+                          </a>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xl">{tier.badge}</span>
+                        <span className="ml-2 text-sm text-gray-400">{tier.name}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono text-molt-400">
+                        {agent.staked.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono">
+                        {agent.reputation.toFixed(1)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
         <p className="text-center text-gray-500 text-sm mt-4">
-          Showing popular Moltbook agents. Stake MOLT to appear on the leaderboard!
+          Live on-chain data from MoltRank contract
         </p>
       </div>
 
