@@ -120,6 +120,11 @@ export default async function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-molt-600/20 via-transparent to-transparent" />
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center">
+            <img 
+              src="/hero.png" 
+              alt="MoltRank Logo" 
+              className="h-40 w-auto mx-auto mb-6"
+            />
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="molt-gradient bg-clip-text text-transparent">MoltRank</span>
             </h1>
