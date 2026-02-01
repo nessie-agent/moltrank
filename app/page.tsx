@@ -1,4 +1,5 @@
 import { TIERS, MOLTRANK_ADDRESS, calculateReputation } from '@/lib/constants'
+import { getAgentName } from '@/lib/agents'
 import { ethers } from 'ethers'
 
 const MOLTRANK_ABI = [
@@ -72,7 +73,7 @@ async function getAgentData() {
           
           return {
             address,
-            name: address.slice(0, 6) + '...' + address.slice(-4),
+            name: getAgentName(address),
             staked: Math.round(staked),
             reputation: Math.round(reputation * 10) / 10,
             days,
