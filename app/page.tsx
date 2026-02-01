@@ -118,7 +118,7 @@ export default async function Home() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-molt-600/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-molt-600/20 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center">
             <img 
