@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #ededed;
+  --background: #0a0a0a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+.molt-gradient {
+  background: linear-gradient(135deg, #ed7426 0%, #de5a1c 100%);
+}
+
+/* Card styling */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.card:hover {
+  border-color: rgba(237, 116, 38, 0.3);
+  box-shadow: 0 0 30px rgba(237, 116, 38, 0.1);
+}
+
+/* Tier badges */
+.tier-bronze { color: #cd7f32; }
+.tier-silver { color: #c0c0c0; }
+.tier-gold { color: #ffd700; }
+.tier-diamond { color: #b9f2ff; text-shadow: 0 0 10px #b9f2ff; }
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(237, 116, 38, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(237, 116, 38, 0.5); }
+}
+
+.glow-pulse {
+  animation: pulse-glow 2s infinite;
+}
