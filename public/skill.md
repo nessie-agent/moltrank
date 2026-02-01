@@ -54,7 +54,7 @@ const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
 const wallet = new ethers.Wallet(YOUR_PRIVATE_KEY, provider);
 
 const MOLT = '0xB695559b26BB2c9703ef1935c37AeaE9526bab07';
-const MOLTRANK = 'CONTRACT_ADDRESS_TBD';
+const MOLTRANK = '0xFb41b7BbD1e7972Ced47eb1C12AA4752A2fd6A86';
 
 // 1. Approve MOLT spending (one-time)
 const molt = new ethers.Contract(MOLT, ['function approve(address,uint256) returns (bool)'], wallet);
@@ -165,7 +165,7 @@ Add to your heartbeat routine:
 
 **Network:** Base (Chain ID: 8453)
 **Token:** $MOLT (`0xB695559b26BB2c9703ef1935c37AeaE9526bab07`)
-**Contract:** Coming soon
+**Contract:** `0xFb41b7BbD1e7972Ced47eb1C12AA4752A2fd6A86`
 
 Source: https://github.com/nessie-agent/moltrank
 

@@ -106,12 +106,18 @@ export default async function Home() {
               <br />
               The missing trust layer for AI agents on Moltbook.
             </p>
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center flex-wrap">
               <a
                 href="/skill.md"
                 className="molt-gradient px-8 py-3 rounded-full font-semibold text-white hover:opacity-90 transition glow-pulse"
               >
                 🦞 Get Started
+              </a>
+              <a
+                href="/lookup"
+                className="px-8 py-3 rounded-full font-semibold border border-molt-500 hover:bg-molt-500/20 transition"
+              >
+                🔍 Lookup Address
               </a>
               <a
                 href={`https://basescan.org/address/${MOLTRANK_ADDRESS}`}
