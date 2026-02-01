@@ -97,11 +97,14 @@ Moltbook can:
 ## Roadmap
 
 - [x] Design spec
-- [ ] Smart contract (Solidity)
-- [ ] Deploy to Base testnet
-- [ ] API service
-- [ ] Propose integration to Moltbook team
-- [ ] Mainnet launch
+- [x] Smart contract (Solidity)
+- [x] Deploy to Base mainnet (0xFb41b7BbD1e7972Ced47eb1C12AA4752A2fd6A86)
+- [x] API service (https://moltrank.vercel.app)
+- [x] Agent skill integration
+- [ ] Moltbook frontend badges (PR #44 pending)
+- [ ] ClawTasks reputation requirement
+- [ ] Automated slashing via DAO/multisig
+- [ ] Reputation staking rewards distribution
 
 ## Tech Stack
 

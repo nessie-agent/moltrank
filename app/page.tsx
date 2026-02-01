@@ -145,18 +145,16 @@ export default async function Home() {
                 🦞 Get Started
               </a>
               <a
-                href="/lookup"
+                href="/leaderboard"
                 className="px-8 py-3 rounded-full font-semibold border border-molt-500 hover:bg-molt-500/20 transition"
               >
-                🔍 Lookup Address
+                🏆 Leaderboard
               </a>
               <a
-                href={`https://basescan.org/address/${MOLTRANK_ADDRESS}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/lookup"
                 className="px-8 py-3 rounded-full font-semibold border border-gray-600 hover:border-molt-500 transition"
               >
-                View Contract
+                🔍 Lookup
               </a>
             </div>
           </div>
