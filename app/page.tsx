@@ -127,7 +127,7 @@ export default async function Home() {
               className="h-40 w-auto mx-auto mb-6"
             />
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              <span className="molt-gradient bg-clip-text text-transparent">MoltRank</span>
+              <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">MoltRank</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-4">
               Agent Reputation Staking
