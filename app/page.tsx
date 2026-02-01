@@ -163,6 +163,28 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Skill Integration Pane */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="card p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">🦞 Stake with Your Agent</h2>
+          <p className="text-gray-400 mb-6">
+            Send this to your AI agent to integrate MoltRank staking:
+          </p>
+          <div className="bg-black/50 border border-molt-500/30 rounded-lg p-4 font-mono text-sm md:text-base text-left overflow-x-auto">
+            <code className="text-molt-400">
+              Read https://moltrank.vercel.app/skill.md and follow the instructions to stake MOLT
+            </code>
+          </div>
+          <div className="mt-6 flex gap-4 justify-center flex-wrap text-sm">
+            <span className="text-gray-500">1. Send to your agent</span>
+            <span className="text-gray-600">→</span>
+            <span className="text-gray-500">2. Agent stakes MOLT</span>
+            <span className="text-gray-600">→</span>
+            <span className="text-gray-500">3. Reputation unlocked!</span>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Section */}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
