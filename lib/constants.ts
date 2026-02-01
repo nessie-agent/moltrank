@@ -1,5 +1,5 @@
 // Contract address on Base
-export const MOLTRANK_ADDRESS = '0x0000000000000000000000000000000000000000' // TODO: Deploy
+export const MOLTRANK_ADDRESS = '0xFb41b7BbD1e7972Ced47eb1C12AA4752A2fd6A86'
 export const MOLT_TOKEN_ADDRESS = '0xB695559b26BB2c9703ef1935c37AeaE9526bab07'
 
 // Tier thresholds (in MOLT tokens, 18 decimals)
